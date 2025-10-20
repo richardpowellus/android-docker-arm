@@ -49,11 +49,18 @@ RUN wget -q https://dl.google.com/android/repository/commandlinetools-linux-1107
     mv /tmp/cmdline-tools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest && \
     rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools /tmp/*
 
-# Accept licenses and install Android SDK components
-RUN yes | sdkmanager --licenses && \
-    sdkmanager --update && \
-    sdkmanager "platform-tools" "platforms;android-33" "emulator" && \
-    if [ "$TARGETARCH" = "arm64" ]; then \
+# Accept licenses
+RUN yes | sdkmanager --licenses
+
+# Install base Android SDK components
+RUN sdkmanager --update && \
+    sdkmanager "platform-tools" "platforms;android-33"
+
+# Install emulator
+RUN sdkmanager "emulator"
+
+# Install system images and create AVD
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
         sdkmanager "system-images;android-33;google_apis;arm64-v8a" && \
         echo "no" | avdmanager create avd -n android_emulator -k "system-images;android-33;google_apis;arm64-v8a" --force; \
     else \
