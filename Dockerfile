@@ -47,17 +47,19 @@ RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools && \
 RUN wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip && \
     unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-tools && \
     mv /tmp/cmdline-tools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest && \
-    rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools /tmp/*
+    rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools /tmp/* && \
+    yes | sdkmanager --licenses
 
-# Accept licenses
-RUN yes | sdkmanager --licenses
-
-# Install base Android SDK components
+# Install base Android SDK components (platform-tools and platform)
 RUN sdkmanager --update && \
     sdkmanager "platform-tools" "platforms;android-33"
 
-# Install emulator
-RUN sdkmanager "emulator"
+# Install emulator (only available for x86_64, not ARM64)
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+        sdkmanager "emulator"; \
+    else \
+        echo "Note: Android Emulator not available for ARM64 via sdkmanager"; \
+    fi
 
 # Install system images and create AVD
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
