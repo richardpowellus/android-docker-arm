@@ -3,7 +3,7 @@
 .PHONY: help build start stop restart logs shell install-whatsapp clean
 
 help:
-	@echo "Android Docker ARM64 - WhatsApp Headless"
+	@echo "Android Docker Multi-Architecture"
 	@echo "========================================"
 	@echo ""
 	@echo "Available commands:"
@@ -46,7 +46,7 @@ logs:
 	docker-compose logs -f
 
 shell:
-	docker exec -it android-whatsapp-arm64 bash
+	docker exec -it android-emulator bash
 
 clean:
 	@echo "Stopping and removing containers and volumes..."

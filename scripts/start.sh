@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Starting Android Docker ARM64 container..."
+echo "Starting Android Docker container..."
 
 # Start Xvfb (Virtual Frame Buffer)
 echo "Starting Xvfb..."
@@ -35,7 +35,7 @@ sleep 2
 # Configure emulator settings
 EMULATOR_MEMORY=${EMULATOR_MEMORY:-4096}
 EMULATOR_CORES=${EMULATOR_CORES:-4}
-EMULATOR_NAME=${EMULATOR_NAME:-android_arm64}
+EMULATOR_NAME=${EMULATOR_NAME:-android_emulator}
 
 # Start Android Emulator
 echo "Starting Android Emulator: $EMULATOR_NAME..."
@@ -98,9 +98,9 @@ echo "VNC Password: $VNC_PASSWORD"
 echo "noVNC Web Access: http://localhost:6080"
 echo "ADB Connection: adb connect localhost:5555"
 echo ""
-echo "To install WhatsApp, connect via the web interface at http://localhost:6080"
-echo "Then download and install WhatsApp APK from within the Android browser"
-echo "or use: adb install /path/to/whatsapp.apk"
+echo "To install apps, connect via the web interface at http://localhost:6080"
+echo "Then download and install APKs from within the Android browser"
+echo "or use: adb install /path/to/app.apk"
 echo "=========================================="
 
 # Keep container running and monitor processes

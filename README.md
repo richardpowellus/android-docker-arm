@@ -1,29 +1,30 @@
-# Android Docker ARM64 - WhatsApp Headless
+# Android Docker Multi-Architecture
 
-A Docker container for running Android emulator on ARM64 architecture with WhatsApp support and remote UI access via VNC/noVNC.
+A Docker container for running Android emulator with support for both ARM64 and AMD64 architectures. Provides remote UI access via VNC/noVNC for headless operation.
 
 ## Features
 
-- ✅ Android 13 (API 33) emulator optimized for ARM64
+- ✅ Android 13 (API 33) emulator for ARM64 and AMD64
+- ✅ Multi-architecture support (ARM64/AMD64)
 - ✅ Headless operation with VNC server
 - ✅ Web-based access via noVNC (browser-based VNC client)
-- ✅ Pre-configured for WhatsApp installation
 - ✅ Persistent data storage
 - ✅ Hardware acceleration support (KVM)
 - ✅ ADB access for remote management
+- ✅ Pre-built images via GitHub Actions
 
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- ARM64 architecture (Apple Silicon, AWS Graviton, etc.)
+- ARM64 (Apple Silicon, AWS Graviton) or AMD64 (x86_64) architecture
 - At least 8GB RAM recommended
 - KVM support (optional, for better performance on Linux)
 
 ## Quick Start
 
-### Option 1: Using Pre-built Image from GitHub Container Registry (Recommended for Portainer)
+### Option 1: Using Pre-built Image from GitHub Container Registry (Recommended)
 
-The easiest way to use this project is with the pre-built ARM64 image from GitHub Container Registry.
+The easiest way to use this project is with the pre-built multi-architecture image from GitHub Container Registry.
 
 #### 1. Pull and Start Container
 
@@ -32,19 +33,7 @@ docker-compose pull
 docker-compose up -d
 ```
 
-The image is automatically built via GitHub Actions and published to `ghcr.io/richardpowellus/android-docker-arm:latest`.
-
-#### 2. Using with Portainer
-
-1. In Portainer, go to **Stacks** → **Add Stack**
-2. Choose **Git Repository** or **Upload** method
-3. If using Git:
-   - Repository URL: `https://github.com/richardpowellus/android-docker-arm`
-   - Compose path: `docker-compose.yml`
-4. Or simply paste the `docker-compose.yml` content
-5. Click **Deploy the stack**
-
-The pre-built image will be automatically pulled from GitHub Container Registry.
+The image is automatically built via GitHub Actions and published to `ghcr.io/richardpowellus/android-docker-arm:latest` with support for both ARM64 and AMD64 architectures.
 
 ### Option 2: Building Locally
 
@@ -109,33 +98,33 @@ Wait for the message: "Android Emulator is ready!"
 - Connect to `localhost:5900`
 - Use password: `android` (or your custom password)
 
-## Installing WhatsApp
+## Installing Android Apps
 
 ### Method 1: Using Web Browser (Easiest)
 
 1. Access the Android UI via http://localhost:6080
 2. Open the Chrome browser in Android
 3. Navigate to APKMirror or APKPure
-4. Download the WhatsApp APK
+4. Download the desired APK
 5. Install the APK when prompted
-6. Open WhatsApp and configure your account
+6. Open the app from the app drawer
 
 ### Method 2: Using ADB
 
-1. Download WhatsApp APK to your host machine
+1. Download APK to your host machine
 2. Install via ADB:
 
 ```bash
 # Connect to the emulator
 adb connect localhost:5555
 
-# Install WhatsApp
-adb install /path/to/WhatsApp.apk
+# Install app
+adb install /path/to/app.apk
 ```
 
 ### Method 3: Pre-download APK
 
-1. Place WhatsApp APK in a `apks` folder
+1. Place APK files in an `apks` folder
 2. Update `docker-compose.yml` to mount the folder:
 ```yaml
 volumes:
@@ -143,7 +132,7 @@ volumes:
 ```
 3. Install from inside the container:
 ```bash
-docker exec android-whatsapp-arm64 adb install /apks/WhatsApp.apk
+docker exec android-emulator adb install /apks/app.apk
 ```
 
 ## Configuration
@@ -163,9 +152,17 @@ To modify emulator settings, edit the `Dockerfile`:
 
 ```dockerfile
 # Change device profile
-RUN echo "no" | avdmanager create avd -n "android_arm64" \
-    -k "system-images;android-33;google_apis;arm64-v8a" \
-    -d "pixel_5" -f  # Change "pixel_5" to another device
+# The Dockerfile automatically selects the correct architecture
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ]; then \
+        echo "no" | avdmanager create avd -n "android_emulator" \
+            -k "system-images;android-33;google_apis;arm64-v8a" \
+            -d "pixel_5" -f;  # Change "pixel_5" to another device
+    else \
+        echo "no" | avdmanager create avd -n "android_emulator" \
+            -k "system-images;android-33;google_apis;x86_64" \
+            -d "pixel_5" -f;
+    fi
 ```
 
 ### Memory and CPU
@@ -201,7 +198,7 @@ docker-compose logs -f
 
 ### Access Container Shell
 ```bash
-docker exec -it android-whatsapp-arm64 bash
+docker exec -it android-emulator bash
 ```
 
 ## Using ADB
@@ -228,9 +225,9 @@ adb pull /sdcard/file.txt ./
 adb shell
 ```
 
-## Accessing WhatsApp Data
+## Accessing Android Data
 
-WhatsApp data is stored in the persistent Docker volumes. To backup:
+Android emulator data is stored in the persistent Docker volumes. To backup:
 
 ```bash
 # List volumes
@@ -282,12 +279,12 @@ netstat -ano | findstr "6080"
 3. Reduce screen resolution in Dockerfile
 4. Disable animations (already configured)
 
-### WhatsApp Won't Install
+### App Won't Install
 
 1. Ensure you have enough storage space
 2. Try a different APK version
-3. Check Android version compatibility
-4. Use a WhatsApp Business APK if regular version fails
+3. Check Android version compatibility (API 33)
+4. Verify APK architecture matches (ARM64 or x86_64)
 
 ## Advanced Usage
 
@@ -301,18 +298,18 @@ To run multiple Android instances:
 ports:
   - "5901:5900"  # Different VNC port
   - "6081:6080"  # Different noVNC port
-container_name: android-whatsapp-arm64-2
+container_name: android-emulator-2
 ```
 3. Start: `docker-compose -f docker-compose-instance2.yml up -d`
 
-### Automating WhatsApp Installation
+### Automating App Installation
 
 Create a script to automate installation:
 
 ```bash
 #!/bin/bash
-docker exec android-whatsapp-arm64 adb wait-for-device
-docker exec android-whatsapp-arm64 adb install /path/to/WhatsApp.apk
+docker exec android-emulator adb wait-for-device
+docker exec android-emulator adb install /path/to/app.apk
 ```
 
 ### Remote Access Over Network
@@ -330,32 +327,54 @@ ports:
 
 **⚠️ Security Warning:** Always use a strong VNC password when exposing to network!
 
+## Multi-Architecture Support
+
+This container supports both ARM64 and AMD64 architectures:
+
+- **ARM64**: Uses `system-images;android-33;google_apis;arm64-v8a`
+- **AMD64**: Uses `system-images;android-33;google_apis;x86_64`
+
+The correct architecture is automatically selected during build time. Both images are built via GitHub Actions and published as a multi-architecture manifest, so Docker automatically pulls the correct version for your platform.
+
+## Performance Optimizations
+
+This container is optimized for minimal size and maximum performance:
+
+- **Debian 12 Slim base** - 40% smaller than Ubuntu, faster startup
+- **Minimal dependencies** - Only essential packages installed with `--no-install-recommends`
+- **Headless JDK** - No GUI components for Java
+- **Shallow git clones** - Minimal noVNC installation
+- **Aggressive cleanup** - Removes package caches, temp files, and git history
+- **Multi-stage awareness** - Architecture detection at build time
+
 ## Architecture Notes
 
-This container is designed for ARM64 architecture and includes:
+This container includes:
 
-- Ubuntu 22.04 base image
+- Debian 12 Slim base image (minimal footprint)
 - Android SDK Command Line Tools
-- Android Emulator with ARM64 system image
+- Android Emulator with ARM64 or AMD64 system image
 - Xvfb for virtual display
 - x11vnc for VNC access
 - noVNC for web-based access
 - Fluxbox window manager (lightweight)
+- Automatic architecture detection
 
 ## Security Considerations
 
 1. **Change Default Password:** Always change the default VNC password
 2. **Network Exposure:** Be cautious when exposing ports to the internet
-3. **WhatsApp Security:** Use official WhatsApp APKs only
-4. **Data Privacy:** WhatsApp data is stored in Docker volumes
+3. **APK Security:** Use official APKs from trusted sources only
+4. **Data Privacy:** Android data is stored in Docker volumes
 5. **Regular Updates:** Keep the container and Android image updated
 
 ## Limitations
 
 - No hardware camera support (emulator limitation)
-- Phone calls via WhatsApp may have limitations
-- SMS verification requires phone number with WhatsApp capability
+- Phone calls may have limitations in emulator
+- SMS verification requires compatible services
 - Performance depends on host system resources
+- AMD64 emulation may be slower than ARM64 on ARM hosts
 
 ## GitHub Container Registry
 
@@ -401,8 +420,8 @@ The Docker image is automatically built and pushed when:
 - [Android SDK Documentation](https://developer.android.com/studio/command-line)
 - [Docker Documentation](https://docs.docker.com/)
 - [noVNC Project](https://github.com/novnc/noVNC)
-- [WhatsApp Download](https://www.whatsapp.com/android/)
 - [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+- [Docker Multi-Architecture Builds](https://docs.docker.com/build/building/multi-platform/)
 
 ## License
 

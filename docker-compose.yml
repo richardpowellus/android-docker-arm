@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  android-whatsapp:
+  android:
     # Use pre-built image from GitHub Container Registry
     # To build locally instead, comment out 'image:' and uncomment 'build:' section below
     image: ghcr.io/richardpowellus/android-docker-arm:latest
@@ -11,8 +11,11 @@ services:
     #   context: .
     #   dockerfile: Dockerfile
     
-    container_name: android-whatsapp-arm64
+    container_name: android-emulator
     privileged: true
+    # Remove 'privileged: true' and uncomment devices below if KVM is available for better security
+    # devices:
+    #   - /dev/kvm:/dev/kvm
     ports:
       - "5900:5900"  # VNC port
       - "6080:6080"  # noVNC web interface
@@ -20,7 +23,7 @@ services:
     environment:
       - DISPLAY=:99
       - VNC_PASSWORD=${VNC_PASSWORD:-android}
-      - EMULATOR_NAME=android_arm64
+      - EMULATOR_NAME=android_emulator
       - EMULATOR_MEMORY=${EMULATOR_MEMORY:-4096}
       - EMULATOR_CORES=${EMULATOR_CORES:-4}
     volumes:
@@ -29,9 +32,7 @@ services:
     restart: unless-stopped
     stdin_open: true
     tty: true
-    devices:
-      - /dev/kvm:/dev/kvm  # KVM support for hardware acceleration (if available)
-    shm_size: '2gb'  # Shared memory for better performance
+    shm_size: '2gb'
 
 volumes:
   android-data:
