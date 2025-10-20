@@ -11,31 +11,27 @@ services:
     #   context: .
     #   dockerfile: Dockerfile
     
-    container_name: android-emulator
+    container_name: waydroid-android
     privileged: true
-    # Remove 'privileged: true' and uncomment devices below if KVM is available for better security
-    # devices:
-    #   - /dev/kvm:/dev/kvm
+    # Waydroid requires privileged mode for LXC containers
     ports:
       - "5900:5900"  # VNC port
       - "6080:6080"  # noVNC web interface
-      - "5555:5555"  # ADB port (optional, for debugging)
     environment:
       - DISPLAY=:99
       - VNC_PASSWORD=${VNC_PASSWORD:-android}
-      - EMULATOR_NAME=android_emulator
-      - EMULATOR_MEMORY=${EMULATOR_MEMORY:-4096}
-      - EMULATOR_CORES=${EMULATOR_CORES:-4}
     volumes:
-      - android-data:/root/.android
+      - waydroid-data:/var/lib/waydroid
+      - waydroid-home:/root/.local/share/waydroid
       - avd-data:/root/.android/avd
     restart: unless-stopped
     stdin_open: true
     tty: true
     shm_size: '2gb'
+    command: /start.sh
 
 volumes:
-  android-data:
+  waydroid-data:
     driver: local
-  avd-data:
+  waydroid-home:
     driver: local
