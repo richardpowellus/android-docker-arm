@@ -1,0 +1,35 @@
+# Docker and build artifacts
+.env
+*.log
+
+# Android SDK and emulator artifacts
+.android/
+*.avd/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# APK files (uncomment if you don't want to track them)
+# *.apk
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.backup
+*.bak
+backup/
+
+# Volume data
+data/
+volumes/

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  android-whatsapp:
+    # Use pre-built image from GitHub Container Registry
+    # To build locally instead, comment out 'image:' and uncomment 'build:' section below
+    image: ghcr.io/richardpowellus/android-docker-arm:latest
+    
+    # Uncomment to build locally:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    
+    container_name: android-whatsapp-arm64
+    privileged: true
+    ports:
+      - "5900:5900"  # VNC port
+      - "6080:6080"  # noVNC web interface
+      - "5555:5555"  # ADB port (optional, for debugging)
+    environment:
+      - DISPLAY=:99
+      - VNC_PASSWORD=${VNC_PASSWORD:-android}
+      - EMULATOR_NAME=android_arm64
+      - EMULATOR_MEMORY=${EMULATOR_MEMORY:-4096}
+      - EMULATOR_CORES=${EMULATOR_CORES:-4}
+    volumes:
+      - android-data:/root/.android
+      - avd-data:/root/.android/avd
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    devices:
+      - /dev/kvm:/dev/kvm  # KVM support for hardware acceleration (if available)
+    shm_size: '2gb'  # Shared memory for better performance
+
+volumes:
+  android-data:
+    driver: local
+  avd-data:
+    driver: local
