@@ -24,7 +24,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-gi \
     python3-dbus \
-    python3-gbinder \
     dbus \
     iptables \
     x11vnc \
@@ -45,8 +44,7 @@ RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
 # Install Waydroid
 RUN git clone --depth 1 https://github.com/waydroid/waydroid.git /opt/waydroid && \
     cd /opt/waydroid && \
-    pip3 install --break-system-packages -r requirements.txt && \
-    python3 setup.py install --prefix=/usr && \
+    python3 setup.py install && \
     rm -rf /opt/waydroid
 
 # Create necessary directories
