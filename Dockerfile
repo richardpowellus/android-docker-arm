@@ -46,13 +46,13 @@ RUN wget -q https://dl.google.com/android/repository/commandlinetools-linux-1107
     mv /tmp/cmdline-tools/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest && \
     rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools /tmp/*
 
-# Accept licenses and install Android SDK components for both architectures
+# Accept licenses and install Android SDK components (emulator included with system-images)
 RUN yes | sdkmanager --licenses && \
     sdkmanager "platform-tools" "platforms;android-33" && \
     if [ "$(uname -m)" = "aarch64" ]; then \
-        sdkmanager "system-images;android-33;google_apis;arm64-v8a" "emulator"; \
+        sdkmanager "system-images;android-33;google_apis;arm64-v8a"; \
     else \
-        sdkmanager "system-images;android-33;google_apis;x86_64" "emulator"; \
+        sdkmanager "system-images;android-33;google_apis;x86_64"; \
     fi
 
 # Set display
