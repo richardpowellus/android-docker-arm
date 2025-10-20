@@ -50,25 +50,19 @@ RUN wget -q https://dl.google.com/android/repository/commandlinetools-linux-1107
     rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools /tmp/*
 
 # Accept licenses and install Android SDK components
-# Install emulator and architecture-specific system images
+# System images include the emulator dependency
 RUN yes | sdkmanager --licenses && \
-    sdkmanager "platform-tools" "platforms;android-33" "emulator" && \
+    sdkmanager "platform-tools" "platforms;android-33" && \
     if [ "$TARGETARCH" = "arm64" ]; then \
-        sdkmanager "system-images;android-33;google_apis;arm64-v8a"; \
+        sdkmanager "system-images;android-33;google_apis;arm64-v8a" && \
+        echo "no" | avdmanager create avd -n android_emulator -k "system-images;android-33;google_apis;arm64-v8a" --force; \
     else \
-        sdkmanager "system-images;android-33;google_apis;x86_64"; \
+        sdkmanager "system-images;android-33;google_apis;x86_64" && \
+        echo "no" | avdmanager create avd -n android_emulator -k "system-images;android-33;google_apis;x86_64" --force; \
     fi
 
 # Set display
 ENV DISPLAY=:99
-
-# Create AVD (Android Virtual Device) based on architecture
-RUN ARCH=$(uname -m) && \
-    if [ "$ARCH" = "aarch64" ]; then \
-        echo "no" | avdmanager create avd -n "android_emulator" -k "system-images;android-33;google_apis;arm64-v8a" -d "pixel_5" -f; \
-    else \
-        echo "no" | avdmanager create avd -n "android_emulator" -k "system-images;android-33;google_apis;x86_64" -d "pixel_5" -f; \
-    fi
 
 # Configure AVD settings for headless operation
 RUN mkdir -p /root/.android/avd/android_emulator.avd && \
