@@ -44,7 +44,7 @@ RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
 # Install Waydroid
 RUN git clone --depth 1 https://github.com/waydroid/waydroid.git /opt/waydroid && \
     cd /opt/waydroid && \
-    python3 setup.py install && \
+    make install && \
     rm -rf /opt/waydroid
 
 # Create necessary directories
