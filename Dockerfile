@@ -1,8 +1,8 @@
 # Android Docker Container for ARM64/AMD64
-# Optimized with Debian slim for minimal size and better performance
+# Optimized with Debian 13 slim for minimal size and better performance
 # Supports remote access via VNC and noVNC
 
-FROM debian:12-slim
+FROM debian:13-slim
 
 # Use Docker's build arguments for architecture detection
 ARG TARGETARCH
@@ -50,9 +50,9 @@ RUN wget -q https://dl.google.com/android/repository/commandlinetools-linux-1107
     rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools /tmp/*
 
 # Accept licenses and install Android SDK components
-# System images include the emulator dependency
 RUN yes | sdkmanager --licenses && \
-    sdkmanager "platform-tools" "platforms;android-33" && \
+    sdkmanager --update && \
+    sdkmanager "platform-tools" "platforms;android-33" "emulator" && \
     if [ "$TARGETARCH" = "arm64" ]; then \
         sdkmanager "system-images;android-33;google_apis;arm64-v8a" && \
         echo "no" | avdmanager create avd -n android_emulator -k "system-images;android-33;google_apis;arm64-v8a" --force; \
