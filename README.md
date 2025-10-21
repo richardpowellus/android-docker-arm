@@ -1,24 +1,42 @@
-# Android Docker Multi-Architecture
+# Android Docker Multi-Architecture (redroid)
 
-A Docker container for running Android emulator with support for both ARM64 and AMD64 architectures. Provides remote UI access via VNC/noVNC for headless operation.
+A Docker container for running Android using **redroid** (Remote Android) with support for both ARM64 and AMD64 architectures. Provides remote access via ADB, scrcpy, and VNC/noVNC for headless operation.
 
 ## Features
 
-- ✅ Android 13 (API 33) emulator for ARM64 and AMD64
+- ✅ Android 16 (64-bit) powered by redroid
 - ✅ Multi-architecture support (ARM64/AMD64)
-- ✅ Headless operation with VNC server
-- ✅ Web-based access via noVNC (browser-based VNC client)
+- ✅ Native Docker integration (no nested containers)
+- ✅ ADB access over network (port 5555)
+- ✅ scrcpy support for high-performance screen mirroring
+- ✅ VNC/noVNC for web browser access
 - ✅ Persistent data storage
-- ✅ Hardware acceleration support (KVM)
-- ✅ ADB access for remote management
+- ✅ GPU acceleration support (guest mode)
 - ✅ Pre-built images via GitHub Actions
 
 ## Prerequisites
 
 - Docker and Docker Compose installed
 - ARM64 (Apple Silicon, AWS Graviton) or AMD64 (x86_64) architecture
-- At least 8GB RAM recommended
-- KVM support (optional, for better performance on Linux)
+- At least 4GB RAM recommended
+- Linux kernel with binder support (see [Kernel Requirements](#kernel-requirements))
+
+## Kernel Requirements
+
+redroid requires specific kernel features. Most modern Linux distributions already have these enabled.
+
+**Required kernel modules:**
+- `binder_linux` (with devices: binder, hwbinder, vndbinder)
+- `ashmem_linux` (or memfd support)
+
+**On Ubuntu/Debian:**
+```bash
+sudo apt install linux-modules-extra-`uname -r`
+sudo modprobe binder_linux devices="binder,hwbinder,vndbinder"
+sudo modprobe ashmem_linux  # if available
+```
+
+**On other distros:** Check [redroid deploy docs](https://github.com/remote-android/redroid-doc/tree/main/deploy) for your specific distribution.
 
 ## Quick Start
 
@@ -26,7 +44,13 @@ A Docker container for running Android emulator with support for both ARM64 and 
 
 The easiest way to use this project is with the pre-built multi-architecture image from GitHub Container Registry.
 
-#### 1. Pull and Start Container
+#### 1. Load kernel modules (Linux only)
+
+```bash
+sudo modprobe binder_linux devices="binder,hwbinder,vndbinder"
+```
+
+#### 2. Pull and Start Container
 
 ```bash
 docker-compose pull
@@ -51,7 +75,7 @@ Uncomment the `build:` section and comment out the `image:` line:
 
 ```yaml
 services:
-  android-whatsapp:
+  android:
     # image: ghcr.io/richardpowellus/android-docker-arm:latest
     build:
       context: .
@@ -68,8 +92,6 @@ cp .env.example .env
 
 Edit `.env` to set your preferences:
 - `VNC_PASSWORD`: Password for VNC access (default: android)
-- `EMULATOR_MEMORY`: Memory allocation in MB (default: 4096)
-- `EMULATOR_CORES`: CPU cores to use (default: 4)
 
 ### 3. Start Container
 
@@ -77,7 +99,7 @@ Edit `.env` to set your preferences:
 docker-compose up -d
 ```
 
-**Note:** If building locally, the first build will take 10-15 minutes as it downloads Android SDK and system images. With the pre-built image, it only takes 1-2 minutes to pull and start.
+**Note:** First startup takes a minute as redroid initializes the Android system.
 
 ### 4. Monitor Startup
 
@@ -85,75 +107,112 @@ docker-compose up -d
 docker-compose logs -f
 ```
 
-Wait for the message: "Android Emulator is ready!"
+Wait for the message: "Starting redroid Android system..."
 
-### 5. Access the Android UI
+### 5. Access Android
 
-**Option A: Web Browser (Recommended)**
+**Option A: ADB (Recommended for automation)**
+```bash
+# Connect to Android via ADB
+adb connect localhost:5555
+
+# List devices
+adb devices
+
+# Install an APK
+adb install app.apk
+
+# Open a shell
+adb shell
+```
+
+**Option B: scrcpy (Best performance)**
+```bash
+# Install scrcpy: https://github.com/Genymobile/scrcpy
+scrcpy -s localhost:5555
+```
+
+**Option C: Web Browser (noVNC)**
 - Open http://localhost:6080 in your browser
 - Click "Connect"
 - Enter VNC password (default: `android`)
 
-**Option B: VNC Client**
+**Option D: VNC Client**
 - Connect to `localhost:5900`
 - Use password: `android` (or your custom password)
 
+
 ## Installing Android Apps
 
-### Method 1: Using Web Browser (Easiest)
-
-1. Access the Android UI via http://localhost:6080
-2. Open the Chrome browser in Android
-3. Navigate to APKMirror or APKPure
-4. Download the desired APK
-5. Install the APK when prompted
-6. Open the app from the app drawer
-
-### Method 2: Using ADB
-
-1. Download APK to your host machine
-2. Install via ADB:
+### Method 1: Using ADB (Recommended)
 
 ```bash
-# Connect to the emulator
+# Connect to Android via ADB
 adb connect localhost:5555
 
-# Install app
+# Install an APK
 adb install /path/to/app.apk
+
+# Install WhatsApp example
+adb install WhatsApp.apk
 ```
 
-### Method 3: Pre-download APK
+### Method 2: Using scrcpy Interface
 
-1. Place APK files in an `apks` folder
-2. Update `docker-compose.yml` to mount the folder:
-```yaml
-volumes:
-  - ./apks:/apks
-```
-3. Install from inside the container:
-```bash
-docker exec android-emulator adb install /apks/app.apk
-```
+1. Start scrcpy: `scrcpy -s localhost:5555`
+2. Drag and drop APK files onto the scrcpy window
+3. The app will be installed automatically
+
+### Method 3: Using Web Browser (via noVNC)
+
+1. Access Android UI at http://localhost:6080
+2. Use Android's built-in browser to download APKs
+3. Install from Downloads folder
 
 ## Configuration
 
-### Android System Configuration
+### redroid System Configuration
 
-The emulator is pre-configured with:
-- Device: Pixel 5 profile
-- Resolution: 1080x1920
-- Android Version: 13 (API 33)
-- Google APIs included
-- Animations disabled for better performance
+The container is pre-configured with:
+- **Android Version**: 16 (64-bit only, latest)
+- **Architecture**: ARM64 or AMD64 (auto-detected)
+- **Display**: 1920x1080 @ 320 DPI
+- **GPU Mode**: Guest (software rendering)
+- **Data Persistence**: `/data` volume for apps and settings
 
-### Customizing Emulator
+### Customizing redroid
 
-To modify emulator settings, edit the `Dockerfile`:
+redroid supports various boot parameters. Edit `scripts/start.sh` to customize:
+
+```bash
+exec /init androidboot.hardware=redroid \
+    androidboot.redroid_width=1920 \        # Display width
+    androidboot.redroid_height=1080 \       # Display height
+    androidboot.redroid_dpi=320 \           # Display DPI
+    androidboot.redroid_gpu_mode=guest \    # GPU mode: guest, host, auto
+    "$@"
+```
+
+**Available GPU modes:**
+- `guest`: Software rendering (default, works everywhere)
+- `host`: Hardware GPU acceleration (requires compatible host GPU)
+- `auto`: Auto-detect best mode
+
+### Changing Android Version
+
+To use a different Android version, edit the `Dockerfile`:
 
 ```dockerfile
-# Change device profile
-# The Dockerfile automatically selects the correct architecture
-RUN ARCH=$(uname -m) && \
+# Available versions:
+# Android 16: redroid/redroid:16.0.0_64only-latest (current - latest)
+# Android 15: redroid/redroid:15.0.0_64only-latest
+# Android 14: redroid/redroid:14.0.0_64only-latest
+# Android 13: redroid/redroid:13.0.0_64only-latest
+# Android 12: redroid/redroid:12.0.0_64only-latest
+# Android 11: redroid/redroid:11.0.0-latest
+
+FROM redroid/redroid:16.0.0_64only-latest
+ \
     if [ "$ARCH" = "aarch64" ]; then \
         echo "no" | avdmanager create avd -n "android_emulator" \
             -k "system-images;android-33;google_apis;arm64-v8a" \

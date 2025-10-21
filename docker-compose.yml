@@ -11,19 +11,18 @@ services:
     #   context: .
     #   dockerfile: Dockerfile
     
-    container_name: waydroid-android
+    container_name: redroid-android
     privileged: true
-    # Waydroid requires privileged mode for LXC containers
+    # redroid requires privileged mode for binder devices
     ports:
+      - "5555:5555"  # ADB port
       - "5900:5900"  # VNC port
       - "6080:6080"  # noVNC web interface
     environment:
       - DISPLAY=:99
       - VNC_PASSWORD=${VNC_PASSWORD:-android}
     volumes:
-      - waydroid-data:/var/lib/waydroid
-      - waydroid-home:/root/.local/share/waydroid
-      - avd-data:/root/.android/avd
+      - redroid-data:/data
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -31,7 +30,5 @@ services:
     command: /start.sh
 
 volumes:
-  waydroid-data:
-    driver: local
-  waydroid-home:
+  redroid-data:
     driver: local
