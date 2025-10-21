@@ -93,6 +93,10 @@ RUN mkdir -p /var/lib/waydroid && \
     mkdir -p /root/.local/share/waydroid && \
     mkdir -p /run/user/0
 
+# Setup D-Bus system requirements
+RUN dbus-uuidgen > /etc/machine-id && \
+    mkdir -p /var/run/dbus
+
 # Set XDG_RUNTIME_DIR for Waydroid
 ENV XDG_RUNTIME_DIR=/run/user/0
 ENV WAYLAND_DISPLAY=wayland-0
