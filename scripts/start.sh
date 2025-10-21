@@ -30,9 +30,16 @@ sleep 2
 # Start Weston (Wayland compositor) on the X11 display
 echo "Starting Weston Wayland compositor..."
 export DISPLAY=:99
-weston --backend=x11-backend.so --width=1920 --height=1080 &
+export WAYLAND_DISPLAY=wayland-0
+weston --backend=x11-backend.so --width=1920 --height=1080 --socket=wayland-0 &
 WESTON_PID=$!
 sleep 3
+
+# Verify Wayland socket was created
+if [ ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; then
+    echo "ERROR: Wayland socket not created at $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+    ls -la "$XDG_RUNTIME_DIR/"
+fi
 
 # Set VNC password if provided
 VNC_PASSWORD=${VNC_PASSWORD:-android}
