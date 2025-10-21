@@ -56,14 +56,22 @@ echo "Starting noVNC web server..."
 sleep 2
 
 # Start D-Bus system daemon
-echo "Starting D-Bus..."
+echo "Starting D-Bus system daemon..."
 mkdir -p /var/run/dbus
-if [ ! -f /var/run/dbus/pid ]; then
-    dbus-daemon --system --fork
+rm -f /var/run/dbus/pid
+dbus-daemon --system --fork
+sleep 1
+
+# Verify system bus is running
+if [ ! -S /var/run/dbus/system_bus_socket ]; then
+    echo "ERROR: D-Bus system bus socket not created"
+    ls -la /var/run/dbus/
 fi
 
 # Start D-Bus session daemon (needed for Waydroid)
+echo "Starting D-Bus session daemon..."
 export $(dbus-launch)
+sleep 1
 
 # Initialize Waydroid (downloads Android image on first run)
 echo "Initializing Waydroid..."
