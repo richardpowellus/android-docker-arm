@@ -25,6 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-gi \
     python3-dbus \
     dbus \
+    dbus-x11 \
+    kmod \
     iptables \
     x11vnc \
     xvfb \
@@ -88,6 +90,10 @@ RUN git clone --depth 1 https://github.com/waydroid/waydroid.git /opt/waydroid &
 # Create necessary directories
 RUN mkdir -p /var/lib/waydroid && \
     mkdir -p /root/.local/share/waydroid
+
+# Create minimal Fluxbox config to suppress warnings
+RUN mkdir -p /root/.fluxbox && \
+    echo "session.screen0.toolbar.visible: false" > /root/.fluxbox/init
 
 # Expose VNC port and noVNC port
 EXPOSE 5900 6080

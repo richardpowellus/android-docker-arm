@@ -30,13 +30,17 @@ sleep 2
 # Start D-Bus
 echo "Starting D-Bus..."
 mkdir -p /var/run/dbus
-dbus-daemon --system --fork
+if [ ! -f /var/run/dbus/pid ]; then
+    dbus-daemon --system --fork
+fi
 
 # Initialize Waydroid (downloads Android image on first run)
 echo "Initializing Waydroid..."
-if [ ! -d "/var/lib/waydroid/images" ]; then
+if [ ! -f "/var/lib/waydroid/waydroid.cfg" ]; then
     echo "First run detected - downloading Android system image..."
     waydroid init -s GAPPS -f
+else
+    echo "Waydroid already initialized, skipping download..."
 fi
 
 # Start Waydroid container
