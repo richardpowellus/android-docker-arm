@@ -25,12 +25,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-gi \
     python3-dbus \
     dbus \
-    dbus-x11 \
     kmod \
     iptables \
     x11vnc \
     xvfb \
-    fluxbox \
+    weston \
+    xwayland \
     procps \
     git \
     make \
@@ -89,11 +89,12 @@ RUN git clone --depth 1 https://github.com/waydroid/waydroid.git /opt/waydroid &
 
 # Create necessary directories
 RUN mkdir -p /var/lib/waydroid && \
-    mkdir -p /root/.local/share/waydroid
+    mkdir -p /root/.local/share/waydroid && \
+    mkdir -p /run/user/0
 
-# Create minimal Fluxbox config to suppress warnings
-RUN mkdir -p /root/.fluxbox && \
-    echo "session.screen0.toolbar.visible: false" > /root/.fluxbox/init
+# Set XDG_RUNTIME_DIR for Waydroid
+ENV XDG_RUNTIME_DIR=/run/user/0
+ENV WAYLAND_DISPLAY=wayland-0
 
 # Expose VNC port and noVNC port
 EXPOSE 5900 6080

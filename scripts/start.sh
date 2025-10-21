@@ -7,7 +7,7 @@ cleanup() {
     echo "Shutting down..."
     waydroid session stop
     waydroid container stop
-    killall -9 Xvfb fluxbox x11vnc novnc_proxy
+    killall -9 Xvfb weston x11vnc novnc_proxy
     exit 0
 }
 
@@ -21,16 +21,18 @@ export XDG_RUNTIME_DIR=/run/user/0
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
-# Start Xvfb (Virtual Frame Buffer)
+# Start Xvfb (Virtual Frame Buffer for Weston)
 echo "Starting Xvfb..."
 Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset &
 XVFB_PID=$!
 sleep 2
 
-# Start window manager
-echo "Starting Fluxbox window manager..."
-fluxbox &
-sleep 2
+# Start Weston (Wayland compositor) on the X11 display
+echo "Starting Weston Wayland compositor..."
+export DISPLAY=:99
+weston --backend=x11-backend.so --width=1920 --height=1080 &
+WESTON_PID=$!
+sleep 3
 
 # Set VNC password if provided
 VNC_PASSWORD=${VNC_PASSWORD:-android}
