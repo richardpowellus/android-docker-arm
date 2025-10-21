@@ -40,74 +40,40 @@ sudo modprobe ashmem_linux  # if available
 
 ## Quick Start
 
-### Option 1: Using Pre-built Image from GitHub Container Registry (Recommended)
+### Using Docker Compose (Recommended)
 
-The easiest way to use this project is with the pre-built multi-architecture image from GitHub Container Registry.
-
-#### 1. Load kernel modules (Linux only)
+#### 1. Load kernel modules (Linux only - skip on macOS/Windows)
 
 ```bash
 sudo modprobe binder_linux devices="binder,hwbinder,vndbinder"
 ```
 
-#### 2. Pull and Start Container
-
-```bash
-docker-compose pull
-docker-compose up -d
-```
-
-The image is automatically built via GitHub Actions and published to `ghcr.io/richardpowellus/android-docker-arm:latest` with support for both ARM64 and AMD64 architectures.
-
-### Option 2: Building Locally
-
-If you prefer to build the image yourself:
-
-#### 1. Clone or Create Project
-
-```bash
-cd android-docker-arm
-```
-
-#### 2. Edit docker-compose.yml
-
-Uncomment the `build:` section and comment out the `image:` line:
-
-```yaml
-services:
-  android:
-    # image: ghcr.io/richardpowellus/android-docker-arm:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
-```
-
-### 2. Configure Environment (Optional)
-
-Copy the `.env.example` to `.env` and customize:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` to set your preferences:
-- `VNC_PASSWORD`: Password for VNC access (default: android)
-
-### 3. Start Container
+#### 2. Start Container
 
 ```bash
 docker-compose up -d
 ```
 
-**Note:** First startup takes a minute as redroid initializes the Android system.
+**Note:** This uses the official redroid image directly. First startup may take a minute as Android initializes.
 
-### 4. Monitor Startup
+#### 3. Monitor Startup
 
 ```bash
 docker-compose logs -f
 ```
 
-Wait for the message: "Starting redroid Android system..."
+### Using Docker Run (Alternative)
+
+```bash
+docker run -itd --rm --privileged \
+    -v ~/redroid-data:/data \
+    -p 5555:5555 \
+    redroid/redroid:16.0.0_64only-latest \
+    androidboot.redroid_width=1920 \
+    androidboot.redroid_height=1080 \
+    androidboot.redroid_dpi=320 \
+    androidboot.redroid_gpu_mode=guest
+```
 
 ### 5. Access Android
 
@@ -132,14 +98,7 @@ adb shell
 scrcpy -s localhost:5555
 ```
 
-**Option C: Web Browser (noVNC)**
-- Open http://localhost:6080 in your browser
-- Click "Connect"
-- Enter VNC password (default: `android`)
 
-**Option D: VNC Client**
-- Connect to `localhost:5900`
-- Use password: `android` (or your custom password)
 
 
 ## Installing Android Apps

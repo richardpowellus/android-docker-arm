@@ -2,32 +2,25 @@ version: '3.8'
 
 services:
   android:
-    # Use pre-built image from GitHub Container Registry
-    # To build locally instead, comment out 'image:' and uncomment 'build:' section below
-    image: ghcr.io/richardpowellus/android-docker-arm:latest
-    
-    # Uncomment to build locally:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    # Use redroid official image directly
+    image: redroid/redroid:16.0.0_64only-latest
     
     container_name: redroid-android
     privileged: true
     # redroid requires privileged mode for binder devices
     ports:
       - "5555:5555"  # ADB port
-      - "5900:5900"  # VNC port
-      - "6080:6080"  # noVNC web interface
     environment:
-      - DISPLAY=:99
-      - VNC_PASSWORD=${VNC_PASSWORD:-android}
+      - androidboot.redroid_width=1920
+      - androidboot.redroid_height=1080
+      - androidboot.redroid_dpi=320
+      - androidboot.redroid_gpu_mode=guest
     volumes:
       - redroid-data:/data
     restart: unless-stopped
     stdin_open: true
     tty: true
     shm_size: '2gb'
-    command: /start.sh
 
 volumes:
   redroid-data:

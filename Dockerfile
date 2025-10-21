@@ -1,45 +1,38 @@
-# redroid Android Container for ARM64/AMD64
-# Uses redroid (Android-in-Docker) instead of Waydroid
-# Supports remote access via scrcpy over ADB and noVNC
+# Simplified wrapper for redroid Android
+# This builds a minimal image that documents how to use redroid
+# redroid itself should be run directly from redroid/redroid images
 
-FROM redroid/redroid:16.0.0_64only-latest
+FROM debian:bookworm-slim
 
-# Use Docker's build arguments for architecture detection
-ARG TARGETARCH
-
-# Avoid prompts from apt
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install additional tools for remote access
+# Install documentation and helper tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
     curl \
-    xvfb \
-    x11vnc \
-    fluxbox \
-    git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install noVNC for browser-based VNC access
-RUN git clone --depth 1 https://github.com/novnc/noVNC.git /opt/noVNC && \
-    git clone --depth 1 https://github.com/novnc/websockify /opt/noVNC/utils/websockify && \
-    ln -s /opt/noVNC/vnc.html /opt/noVNC/index.html && \
-    rm -rf /opt/noVNC/.git /opt/noVNC/utils/websockify/.git
+# Create a README that explains how to use redroid
+RUN mkdir -p /docs && echo '\
+# How to Use redroid\n\
+\n\
+This project uses redroid for Android in Docker.\n\
+\n\
+## Quick Start\n\
+\n\
+Run redroid directly:\n\
+```bash\n\
+docker run -itd --rm --privileged \\\n\
+    -v ~/data:/data \\\n\
+    -p 5555:5555 \\\n\
+    redroid/redroid:16.0.0_64only-latest \\\n\
+    androidboot.redroid_width=1920 \\\n\
+    androidboot.redroid_height=1080 \\\n\
+    androidboot.redroid_dpi=320\n\
+```\n\
+\n\
+## Access Android\n\
+\n\
+- ADB: `adb connect localhost:5555`\n\
+- scrcpy: `scrcpy -s localhost:5555`\n\
+' > /docs/README.md
 
-# Set display for VNC
-ENV DISPLAY=:99
-
-# Expose ADB port, VNC port, and noVNC port
-EXPOSE 5555 5900 6080
-
-# Copy startup script
-COPY scripts/start.sh /start.sh
-RUN chmod +x /start.sh
-
-# Cleanup to reduce image size
-RUN apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /root/.cache
-
-CMD ["/start.sh"]
+CMD ["cat", "/docs/README.md"]
