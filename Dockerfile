@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-gi \
     python3-dbus \
     dbus \
+    dbus-x11 \
     kmod \
     iptables \
     x11vnc \
