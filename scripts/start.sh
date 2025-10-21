@@ -2,6 +2,25 @@
 
 echo "Starting Waydroid Android container..."
 
+# Cleanup function for graceful shutdown
+cleanup() {
+    echo "Shutting down..."
+    waydroid session stop
+    waydroid container stop
+    killall -9 Xvfb fluxbox x11vnc novnc_proxy
+    exit 0
+}
+
+trap cleanup SIGTERM SIGINT
+
+# Remove stale X lock files
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
+
+# Ensure XDG_RUNTIME_DIR exists and is writable
+export XDG_RUNTIME_DIR=/run/user/0
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
 # Start Xvfb (Virtual Frame Buffer)
 echo "Starting Xvfb..."
 Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset &
@@ -27,12 +46,15 @@ echo "Starting noVNC web server..."
 /opt/noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 6080 &
 sleep 2
 
-# Start D-Bus
+# Start D-Bus system daemon
 echo "Starting D-Bus..."
 mkdir -p /var/run/dbus
 if [ ! -f /var/run/dbus/pid ]; then
     dbus-daemon --system --fork
 fi
+
+# Start D-Bus session daemon (needed for Waydroid)
+export $(dbus-launch)
 
 # Initialize Waydroid (downloads Android image on first run)
 echo "Initializing Waydroid..."
@@ -73,7 +95,8 @@ done
 
 if [ "$waydroid_ready" = false ]; then
     echo "ERROR: Waydroid failed to start within $timeout seconds"
-    exit 1
+    echo "Run 'docker logs <container>' to see full output"
+    # Don't exit, keep container running for debugging
 fi
 
 # Show Waydroid UI (full screen)
